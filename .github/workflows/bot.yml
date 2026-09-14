@@ -1,0 +1,36 @@
+name: Run Telegram Bot
+
+on:
+  schedule:
+    # Запуск каждые 10 минут (можно изменить)
+    - cron: '*/10 * * * *'
+  workflow_dispatch:  # кнопка "запустить вручную"
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run bot
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          MY_CHAT_ID: ${{ secrets.MY_CHAT_ID }}
+        run: python bot.py
+
+      - name: Commit state file
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add last_update.txt || true
+          git diff --quiet && git diff --staged --quiet || git commit -m "Update state"
+          git push || true
